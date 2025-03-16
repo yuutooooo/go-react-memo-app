@@ -100,3 +100,44 @@ fly deploy
 - リアルタイム同期
 - タグ付けとカテゴリ分け
 - 検索機能
+
+
+## /apiディレクトリの構成
+```
+├── Dockerfile
+├── go.mod
+├── go.sum
+├── internal # ここに具体的なコードを書いていく
+│   ├── domain # ドメイン層
+│   │   ├── model # モデルの定義
+│   │   ├── repository # リポジトリのインターフェースを定義
+│   │   └── service # ドメインサービスの実装
+│   ├── infrastructure # 外部（アプリケーション以外のもの）とのやり取り
+│   │   ├── config # DBの接続など
+│   │   ├── external # 外部サービスとのやり取りなど（このアプリケーションではデファイルデータの保存など）
+│   │   └── persistence # ここで実際にデータベースとのやり取りをする。
+│   ├── interface # インターフェース層
+│   │   ├── controller # コントローラー層
+│   │   ├── dto # データ変換などを担当 ここでバリデーションを実装する。
+│   │   └── presenter # レスポンスなどを変換
+│   └── usecase
+├── main.go # プログラムのエントリーポイント
+├── migration # マイグレーションを実行するためのエントリーポイント
+│   └── main.go
+└── tmp
+    ├── air.log
+    └── main
+```
+
+## DBマイグレーション方法
+`/api/migration`に移動して`go run main.go`を実行
+
+## DBデータシード方法
+`/api/seed`に移動して`go run seed.go`を実行
+
+以上の手順を踏んで
+http://localhost:5050
+にアクセスして、
+mail: admin@example.com
+pass: admin
+を入力してサーバーを登録するとデータが登録されているのが確認できる。
