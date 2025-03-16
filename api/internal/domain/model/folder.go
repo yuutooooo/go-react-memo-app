@@ -2,7 +2,6 @@ package model
 
 import "time"
 
-// Folder フォルダエンティティ
 type Folder struct {
 	id             string
 	name           string

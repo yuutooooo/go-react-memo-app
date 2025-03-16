@@ -2,7 +2,6 @@ package model
 
 import "time"
 
-// Note メモエンティティ
 type Note struct {
 	id        string
 	title     string

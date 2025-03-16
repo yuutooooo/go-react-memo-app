@@ -2,7 +2,6 @@ package model
 
 import "time"
 
-// User ユーザーエンティティ
 type User struct {
 	id        string
 	name      string
