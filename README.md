@@ -73,6 +73,7 @@ cp frontend/.env.example frontend/.env.local
 # 開発環境の起動
 docker-compose up -d
 ```
+このコマンドでAirのホットリロード環境、DBサーバー、ファイルサーバーが立ち上がるようになっている。
 
 ## デプロイ
 
