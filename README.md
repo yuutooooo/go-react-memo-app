@@ -141,3 +141,7 @@ http://localhost:5050
 mail: admin@example.com
 pass: admin
 を入力してサーバーを登録するとデータが登録されているのが確認できる。
+
+## テーブル定義
+<img width="806" alt="スクリーンショット 2025-03-16 23 49 05" src="https://github.com/user-attachments/assets/81dcbd6b-4b99-44a8-ba10-afb7a1920ab7" />
+
