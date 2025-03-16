@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # API サービス（Golang + Air）
@@ -14,10 +14,19 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - DATABASE_URL=postgresql://user:password@postgres:5432/localdb?schema=public
-      - MINIO_ENDPOINT=http://minio:9000
-      - MINIO_ACCESS_KEY=minioadmin
-      - MINIO_SECRET_KEY=minioadmin
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DB_SSLMODE=${DB_SSLMODE}
+      - DATABASE_URL=${DATABASE_URL}
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT}
+      - MINIO_ACCESS_KEY=${MINIO_ACCESS_KEY}
+      - MINIO_SECRET_KEY=${MINIO_SECRET_KEY}
+      - MINIO_BUCKET=${MINIO_BUCKET}
+      - PORT=${PORT}
+      - ENV=${ENV}
     depends_on:
       - postgres
       - minio
@@ -27,9 +36,9 @@ services:
     image: postgres:15
     container_name: postgres
     environment:
-      POSTGRES_USER: user
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: localdb
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     ports:
       - "5432:5432"
     volumes:
@@ -49,17 +58,17 @@ services:
     volumes:
       - pgadmin_data:/var/lib/pgadmin
 
-  # MinIO サービス（Cloudflare R2 の代替として利用）
+  # MinIO サービス（Cloudflare R2の代替として利用）
   minio:
     image: minio/minio:latest
     container_name: minio
     command: server /data --console-address ":9001"
     environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY}
     ports:
-      - "9000:9000"   # S3 API 用
-      - "9001:9001"   # コンソール用
+      - "9000:9000" # S3 API 用
+      - "9001:9001" # コンソール用
     volumes:
       - minio_data:/data
 
