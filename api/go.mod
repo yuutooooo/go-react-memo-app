@@ -2,15 +2,7 @@ module github.com/yourusername/go-react-memo-app
 
 go 1.21
 
-require (
-	github.com/aws/aws-sdk-go-v2 v1.25.3
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.7
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.51.4
-	github.com/joho/godotenv v1.5.1
-	github.com/labstack/echo/v4 v4.13.3
-	gorm.io/driver/postgres v1.5.6
-	gorm.io/gorm v1.25.7
-)
+require github.com/labstack/echo/v4 v4.13.3
 
 require (
 	github.com/labstack/gommon v0.4.2 // indirect
