@@ -5,7 +5,6 @@ import (
 	"time"
 )
 
-// NoteVersion メモの編集履歴エンティティ
 type NoteVersion struct {
 	id        string
 	noteID    string

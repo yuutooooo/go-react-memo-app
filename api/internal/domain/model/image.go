@@ -2,7 +2,6 @@ package model
 
 import "time"
 
-// Image 画像エンティティ
 type Image struct {
 	id        string
 	url       string

@@ -2,7 +2,6 @@ package model
 
 import "time"
 
-// NoteAccess ノートへのアクセス権限エンティティ
 type NoteAccess struct {
 	noteID    string
 	userID    string
