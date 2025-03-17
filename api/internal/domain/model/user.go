@@ -1,6 +1,8 @@
 package model
 
-import "time"
+import (
+	"time"
+)
 
 type User struct {
 	id        string
@@ -33,13 +35,22 @@ func (u *User) UpdatedAt() time.Time { return u.updatedAt }
 // Setters
 func (u *User) SetName(name string) {
 	u.name = name
-	u.updatedAt = time.Now()
 }
 func (u *User) SetEmail(email string) {
 	u.email = email
-	u.updatedAt = time.Now()
 }
 func (u *User) SetPassword(password string) {
 	u.password = password
-	u.updatedAt = time.Now()
+}
+
+func (u *User) SetID(id string) {
+	u.id = id
+}
+
+func (u *User) SetCreatedAt(createdAt time.Time) {
+	u.createdAt = createdAt
+}
+
+func (u *User) SetUpdatedAt(updatedAt time.Time) {
+	u.updatedAt = updatedAt
 }
