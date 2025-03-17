@@ -18,11 +18,43 @@ func NewUserController(userUsecase usecase.UserUsecase) *UserController {
 	}
 }
 
-func (c *UserController) GetAllUser(e echo.Context) error {
+func (c *UserController) GetAllUser(ctx echo.Context) error {
 	users, err := c.userUsecase.GetAllUser()
 	if err != nil {
-		return e.JSON(http.StatusInternalServerError, err.Error())
+		return ctx.JSON(http.StatusInternalServerError, err.Error())
 	}
-	response := dto.CreateUserResponse(users)
-	return e.JSON(http.StatusOK, response)
+	response := dto.CreateUserResponseMany(users)
+	return ctx.JSON(http.StatusOK, response)
+}
+
+func (c *UserController) Signup(ctx echo.Context) error {
+	req, err := dto.CreateUserRequest(ctx)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, err.Error())
+	}
+	if err := c.userUsecase.CheckEmail(req.Email); err != nil {
+		return ctx.JSON(http.StatusBadRequest, err.Error())
+	}
+	// ここまでがバリデーションのチェックなので、usecaseのメソッドを呼び出す（しょうがない）
+	// todo どこまで分離するかを再検討
+
+	user, token, err := c.userUsecase.CreateUser(req)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, err.Error())
+	}
+	response := dto.CreateUserResponseSingle(*user, token)
+	return ctx.JSON(http.StatusOK, response)
+}
+
+func (c *UserController) Signin(ctx echo.Context) error {
+	req, err := dto.SigninUserRequest(ctx)
+	if err != nil {
+		return ctx.JSON(http.StatusBadRequest, err.Error())
+	}
+	user, token, err := c.userUsecase.Login(req)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, err.Error())
+	}
+	response := dto.CreateUserResponseSingle(*user, token)
+	return ctx.JSON(http.StatusOK, response)
 }

@@ -16,9 +16,10 @@ type User struct {
 	Email     string    `json:"email"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+	Token     string    `json:"token"`
 }
 
-func CreateUserResponse(users []model.User) UserListResponse {
+func CreateUserResponseMany(users []model.User) UserListResponse {
 	userResponses := make([]User, len(users))
 	for i, user := range users {
 		userResponses[i] = User{
@@ -31,5 +32,16 @@ func CreateUserResponse(users []model.User) UserListResponse {
 	}
 	return UserListResponse{
 		Users: userResponses,
+	}
+}
+
+func CreateUserResponseSingle(user model.User, token string) User {
+	return User{
+		ID:        user.ID(),
+		Name:      user.Name(),
+		Email:     user.Email(),
+		CreatedAt: user.CreatedAt(),
+		UpdatedAt: user.UpdatedAt(),
+		Token:     token,
 	}
 }

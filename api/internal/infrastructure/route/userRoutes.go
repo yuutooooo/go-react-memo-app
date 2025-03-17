@@ -20,6 +20,7 @@ func NewUserController() *controller.UserController {
 
 func SetupUserRoutes(e *echo.Group) {
 	userController := NewUserController()
-	e.GET("/", userController.GetAllUser)
-	// ここでuserControllerを使う
+	e.GET("", userController.GetAllUser)
+	e.POST("/signup", userController.Signup)
+	e.POST("/signin", userController.Signin)
 }

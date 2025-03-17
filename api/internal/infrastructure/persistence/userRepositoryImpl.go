@@ -20,11 +20,28 @@ func (r *UserRepositoryImpl) GetAllUser() ([]model.User, error) {
 	if err := r.db.Find(&users).Error; err != nil {
 		return nil, err
 	}
-	return convertToUserModel(users), nil
+	return convertToUserModelMany(users), nil
+}
+
+func (r *UserRepositoryImpl) FindByEmail(email string) (*model.User, error) {
+	var user gormmodel.User
+	if err := r.db.Where("email = ?", email).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return convertToUserModel(user), nil
+}
+
+func (r *UserRepositoryImpl) CreateUser(user *model.User) (*model.User, error) {
+	gormUser := convertToGormUser(user)
+	if err := r.db.Create(gormUser).Error; err != nil {
+		return nil, err
+	}
+	userModel := convertToUserModel(*gormUser)
+	return userModel, nil
 }
 
 // gormmodelからusermodelに変換
-func convertToUserModel(gormUsers []gormmodel.User) []model.User {
+func convertToUserModelMany(gormUsers []gormmodel.User) []model.User {
 	userModels := make([]model.User, len(gormUsers))
 	for i, user := range gormUsers {
 		userModels[i] = model.User{}
@@ -36,4 +53,26 @@ func convertToUserModel(gormUsers []gormmodel.User) []model.User {
 		userModels[i].SetUpdatedAt(user.UpdatedAt)
 	}
 	return userModels
+}
+
+func convertToUserModel(gormUser gormmodel.User) *model.User {
+	userModel := model.User{}
+	userModel.SetID(gormUser.ID)
+	userModel.SetName(gormUser.Name)
+	userModel.SetEmail(gormUser.Email)
+	userModel.SetPassword(gormUser.Password)
+	userModel.SetCreatedAt(gormUser.CreatedAt)
+	userModel.SetUpdatedAt(gormUser.UpdatedAt)
+	return &userModel
+}
+
+func convertToGormUser(user *model.User) *gormmodel.User {
+	gormUser := gormmodel.User{}
+	gormUser.ID = user.ID()
+	gormUser.Name = user.Name()
+	gormUser.Email = user.Email()
+	gormUser.Password = user.Password()
+	gormUser.CreatedAt = user.CreatedAt()
+	gormUser.UpdatedAt = user.UpdatedAt()
+	return &gormUser
 }

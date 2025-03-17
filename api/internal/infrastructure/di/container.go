@@ -43,7 +43,7 @@ func (c *Container) initialize() {
 	c.userService = service.NewUserService(c.userRepository)
 
 	// ユースケースの初期化
-	c.userUsecase = usecase.NewUserUsecase(c.userService)
+	c.userUsecase = usecase.NewUserUsecase(c.userService, c.userRepository)
 
 	// コントローラーの初期化
 	c.userController = controller.NewUserController(c.userUsecase)
