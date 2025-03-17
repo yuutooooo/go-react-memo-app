@@ -1,24 +1,19 @@
+// src/App.js
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import Button from '@mui/material/Button';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="p-8 bg-white rounded shadow-lg">
+        <h1 className="text-2xl font-bold mb-4">MUI と Tailwind の併用サンプル</h1>
+        <Button variant="contained" color="primary">
+          MUI Button
+        </Button>
+        <p className="mt-4 text-gray-600">
+          これは Tailwind のユーティリティクラスを使用したテキストです。
         </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      </div>
     </div>
   );
 }
