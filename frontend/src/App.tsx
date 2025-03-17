@@ -1,20 +1,50 @@
 // src/App.js
-import React from 'react';
-import Button from '@mui/material/Button';
+import React, { useState } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import Top from "./pages/Top";
+import Home from "./pages/Home";
 
 function App() {
+  // ログイン状態を管理するstate
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // ログイン状態をチェックする関数
+  const checkAuth = () => {
+    // 通常はローカルストレージやCookieからトークンを取得して検証します
+    // ここではusestateだけで簡易的に管理
+    return isLoggedIn;
+  };
+
+  // 認証が必要なルートをラップするコンポーネント
+  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+    if (!checkAuth()) {
+      // 認証されていない場合はログインページにリダイレクト
+      return <Navigate to="/login" replace />;
+    }
+    return <>{children}</>;
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="p-8 bg-white rounded shadow-lg">
-        <h1 className="text-2xl font-bold mb-4">MUI と Tailwind の併用サンプル</h1>
-        <Button variant="contained" color="primary">
-          MUI Button
-        </Button>
-        <p className="mt-4 text-gray-600">
-          これは Tailwind のユーティリティクラスを使用したテキストです。
-        </p>
-      </div>
-    </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<Top />} />
+        <Route
+          path="/login"
+          element={<Login setIsLoggedIn={setIsLoggedIn} />}
+        />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/home" element={<Home />} />
+        {/* 存在しないパスの場合はホームにリダイレクト */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </Router>
   );
 }
 
