@@ -50,7 +50,7 @@ func (s *userService) CreateToken(user *model.User) (string, error) {
 	if secretKey == "" {
 		return "", errors.New("secret key is not set")
 	}
-	println("service debug")
+	println("service debugです")
 	println(user.ID())
 
 	// クレームを設定

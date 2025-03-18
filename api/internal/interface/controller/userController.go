@@ -58,3 +58,7 @@ func (c *UserController) Signin(ctx echo.Context) error {
 	response := dto.CreateUserResponseSingle(*user, token)
 	return ctx.JSON(http.StatusOK, response)
 }
+
+func (c *UserController) Index(ctx echo.Context) error {
+	return ctx.JSON(http.StatusOK, "index")
+}

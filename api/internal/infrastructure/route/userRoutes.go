@@ -6,6 +6,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/yourusername/go-react-memo-app/internal/infrastructure/config"
 	"github.com/yourusername/go-react-memo-app/internal/infrastructure/di"
+	"github.com/yourusername/go-react-memo-app/internal/infrastructure/middleware"
 	"github.com/yourusername/go-react-memo-app/internal/interface/controller"
 )
 
@@ -23,4 +24,9 @@ func SetupUserRoutes(e *echo.Group) {
 	e.GET("", userController.GetAllUser)
 	e.POST("/signup", userController.Signup)
 	e.POST("/signin", userController.Signin)
+
+	// 認証が必要なルート
+	auth := e.Group("")
+	auth.Use(middleware.AuthMiddleware)
+	auth.GET("/index", userController.Index)
 }
