@@ -38,7 +38,9 @@ func (s *userService) GetAllUser() ([]model.User, error) {
 }
 
 func (s *userService) CreateUser(user *model.User) (*model.User, error) {
-	user, err := s.userRepository.CreateUser(user)
+	// ドメインサービス内で新たなユーザーを作成する。
+	newUser := model.NewUser(user.Name(), user.Email(), user.Password())
+	user, err := s.userRepository.CreateUser(newUser)
 	if err != nil {
 		return nil, err
 	}
