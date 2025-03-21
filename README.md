@@ -145,3 +145,11 @@ pass: admin
 ## テーブル定義
 <img width="806" alt="スクリーンショット 2025-03-16 23 49 05" src="https://github.com/user-attachments/assets/81dcbd6b-4b99-44a8-ba10-afb7a1920ab7" />
 
+
+## 開発上の注意
+少し時間を空けてdockerを使用するとエラーが出ることがある。
+その際には以下のコマンドを実行することで解決できる。
+```
+docker-compose build --no-cache api
+docker-compose up
+```

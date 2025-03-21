@@ -10,23 +10,21 @@ import (
 	"github.com/yourusername/go-react-memo-app/internal/interface/controller"
 )
 
-func NewUserController() *controller.UserController {
+func NewFolderController() *controller.FolderController {
 	db, err := config.NewDB()
 	if err != nil {
 		log.Fatal(err)
 	}
 	container := di.NewContainer(db)
-	return container.UserController()
+	return container.FolderController()
 }
 
-func SetupUserRoutes(e *echo.Group) {
-	userController := NewUserController()
-	e.GET("", userController.GetAllUser)
-	e.POST("/signup", userController.Signup)
-	e.POST("/signin", userController.Signin)
-
-	// 認証が必要なルート
+func SetupFolderRoutes(e *echo.Group) {
+	folderController := NewFolderController()
 	auth := e.Group("")
 	auth.Use(middleware.AuthMiddleware)
-	auth.GET("/index", userController.Index)
+	auth.POST("", folderController.CreateFolder)
+	auth.GET("/:id", folderController.GetFolderByID)
+	auth.PUT("/:id", folderController.UpdateFolder)
+	auth.DELETE("/:id", folderController.DeleteFolder)
 }

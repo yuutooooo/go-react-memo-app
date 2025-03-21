@@ -35,8 +35,7 @@ func (c *UserController) Signup(ctx echo.Context) error {
 	if err := c.userUsecase.CheckEmail(req.Email); err != nil {
 		return ctx.JSON(http.StatusBadRequest, err.Error())
 	}
-	// ここまでがバリデーションのチェックなので、usecaseのメソッドを呼び出す（しょうがない）
-	// todo どこまで分離するかを再検討
+
 
 	user, token, err := c.userUsecase.CreateUser(req)
 	if err != nil {
@@ -57,4 +56,8 @@ func (c *UserController) Signin(ctx echo.Context) error {
 	}
 	response := dto.CreateUserResponseSingle(*user, token)
 	return ctx.JSON(http.StatusOK, response)
+}
+
+func (c *UserController) Index(ctx echo.Context) error {
+	return ctx.JSON(http.StatusOK, "index")
 }
