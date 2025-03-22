@@ -9,7 +9,6 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ./api:/go/src/app
-      - ./.env:/go/src/app/.env
       # Go のキャッシュ用（必要に応じて）
       - /go/pkg/mod
     ports:
@@ -29,6 +28,7 @@ services:
       - PORT=${PORT}
       - ENV=docker
       - JWT_SECRET=${JWT_SECRET}
+      - FRONTEND_URL=${FRONTEND_URL}
     depends_on:
       - postgres
       - minio

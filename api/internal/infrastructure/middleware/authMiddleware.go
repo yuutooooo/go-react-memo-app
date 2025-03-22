@@ -13,17 +13,26 @@ import (
 
 func AuthMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		authHeader := c.Request().Header.Get("Authorization")
-		if authHeader == "" {
-			return c.JSON(http.StatusUnauthorized, "認証ヘッダーがありません")
-		}
+		var tokenString string
 
-		// Bearer トークンの抽出（より堅牢な方法）
-		parts := strings.Split(authHeader, " ")
-		if len(parts) != 2 || parts[0] != "Bearer" {
-			return c.JSON(http.StatusUnauthorized, "認証形式が不正です")
+		// まずクッキーからトークンを取得を試みる
+		cookie, err := c.Cookie("auth_token")
+		if err == nil && cookie.Value != "" {
+			tokenString = cookie.Value
+		} else {
+			// クッキーがない場合はAuthorizationヘッダーを確認
+			authHeader := c.Request().Header.Get("Authorization")
+			if authHeader == "" {
+				return c.JSON(http.StatusUnauthorized, "認証情報がありません")
+			}
+
+			// Bearer トークンの抽出
+			parts := strings.Split(authHeader, " ")
+			if len(parts) != 2 || parts[0] != "Bearer" {
+				return c.JSON(http.StatusUnauthorized, "認証形式が不正です")
+			}
+			tokenString = parts[1]
 		}
-		tokenString := parts[1]
 
 		// JWT シークレットキーの取得
 		jwtSecret := os.Getenv("JWT_SECRET")

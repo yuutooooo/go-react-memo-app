@@ -8,4 +8,5 @@ type NoteRepository interface {
 	UpdateNote(note *model.Note) (*model.Note, error)
 	DeleteNote(id string) error
 	GetNotesByFolderID(userID string) ([]*model.Note, error)
+	GetNotesByUserID(userID string) ([]*model.Note, error)
 }

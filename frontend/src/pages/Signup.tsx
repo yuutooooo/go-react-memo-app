@@ -10,8 +10,8 @@ import {
   InputAdornment,
   IconButton,
   Divider,
-  useMediaQuery,
   useTheme,
+  Grid,
 } from "@mui/material";
 import {
   Email as EmailIcon,
@@ -22,15 +22,18 @@ import {
   ArrowBack as ArrowBackIcon,
 } from "@mui/icons-material";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 const Signup: React.FC = () => {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { signup } = useAuth();
   const navigate = useNavigate();
   const theme = useTheme();
 
@@ -42,27 +45,33 @@ const Signup: React.FC = () => {
     setShowConfirmPassword(!showConfirmPassword);
   };
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (
-      email === "" ||
-      username === "" ||
-      password === "" ||
-      confirmPassword === ""
-    ) {
-      setError("すべてのフィールドを入力してください");
-      return;
-    }
-    
-    if (password !== confirmPassword) {
-      setError("パスワードが一致しません");
-      return;
+    setError("");
+
+    // バリデーション
+    if (!name.trim()) {
+      return setError("お名前を入力してください");
     }
 
-    // サインアップ成功をシミュレート
-    // 実際のアプリでは、APIに接続してアカウント作成を行います
-    navigate("/login");
+    if (password !== confirmPassword) {
+      return setError("パスワードが一致しません");
+    }
+
+    if (password.length < 6) {
+      return setError("パスワードは6文字以上にしてください");
+    }
+
+    setLoading(true);
+
+    try {
+      await signup(name, email, password);
+      navigate("/home");
+    } catch (error: any) {
+      setError(error.message || "ユーザー登録に失敗しました");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -123,7 +132,17 @@ const Signup: React.FC = () => {
               </Alert>
             )}
 
-            <form onSubmit={handleSignup}>
+            <form onSubmit={handleSubmit}>
+              <TextField
+                label="お名前"
+                fullWidth
+                margin="normal"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoComplete="name"
+                autoFocus
+              />
+
               <TextField
                 label="メールアドレス"
                 type="email"
@@ -131,45 +150,7 @@ const Signup: React.FC = () => {
                 margin="normal"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="例: user@example.com"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <EmailIcon sx={{ color: "#3f51b5" }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "8px",
-                    "&:hover fieldset": {
-                      borderColor: "#3f51b5",
-                    },
-                  },
-                }}
-              />
-
-              <TextField
-                label="ユーザー名"
-                fullWidth
-                margin="normal"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <PersonIcon sx={{ color: "#3f51b5" }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "8px",
-                    "&:hover fieldset": {
-                      borderColor: "#3f51b5",
-                    },
-                  },
-                }}
+                autoComplete="email"
               />
 
               <TextField
@@ -179,12 +160,8 @@ const Signup: React.FC = () => {
                 margin="normal"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="new-password"
                 InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LockIcon sx={{ color: "#3f51b5" }} />
-                    </InputAdornment>
-                  ),
                   endAdornment: (
                     <InputAdornment position="end">
                       <IconButton
@@ -197,14 +174,6 @@ const Signup: React.FC = () => {
                     </InputAdornment>
                   ),
                 }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "8px",
-                    "&:hover fieldset": {
-                      borderColor: "#3f51b5",
-                    },
-                  },
-                }}
               />
 
               <TextField
@@ -214,12 +183,8 @@ const Signup: React.FC = () => {
                 margin="normal"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
+                autoComplete="new-password"
                 InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LockIcon sx={{ color: "#3f51b5" }} />
-                    </InputAdornment>
-                  ),
                   endAdornment: (
                     <InputAdornment position="end">
                       <IconButton
@@ -235,14 +200,6 @@ const Signup: React.FC = () => {
                       </IconButton>
                     </InputAdornment>
                   ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "8px",
-                    "&:hover fieldset": {
-                      borderColor: "#3f51b5",
-                    },
-                  },
                 }}
               />
 
@@ -265,8 +222,9 @@ const Signup: React.FC = () => {
                     backgroundColor: "#303f9f",
                   },
                 }}
+                disabled={loading}
               >
-                アカウント作成
+                {loading ? "登録中..." : "アカウント作成"}
               </Button>
             </form>
 
