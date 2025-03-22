@@ -43,7 +43,7 @@ func (r *FolderRepositoryImpl) GetRootFolder(userID string, path string) ([]*mod
 }
 
 func (r *FolderRepositoryImpl) UpdateFolder(folder *model.Folder, id string) (*model.Folder, error) {
-	gormFolder := convertToGormFolder(folder)
+	gormFolder := convertToGormFolderUpdate(folder)
 	if err := r.db.Where("id = ?", id).Save(gormFolder).Error; err != nil {
 		return nil, err
 	}
@@ -77,6 +77,22 @@ func convertToGormFolder(folder *model.Folder) *gormmodel.Folder {
 	gormFolder.UserID = folder.UserID()
 	gormFolder.Path = folder.Path()
 	gormFolder.ParentFolderID = parentID
+	return &gormFolder
+}
+
+func convertToGormFolderUpdate(folder *model.Folder) *gormmodel.Folder {
+	var gormFolder gormmodel.Folder
+	var parentID *string
+	if folder.ParentFolderID() != nil {
+		parentID = folder.ParentFolderID()
+	}
+	gormFolder.ID = folder.ID()
+	gormFolder.Name = folder.Name()
+	gormFolder.UserID = folder.UserID()
+	gormFolder.Path = folder.Path()
+	gormFolder.ParentFolderID = parentID
+	gormFolder.CreatedAt = folder.CreatedAt()
+	gormFolder.UpdatedAt = folder.UpdatedAt()
 	return &gormFolder
 }
 

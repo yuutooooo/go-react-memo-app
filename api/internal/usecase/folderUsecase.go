@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"errors"
 	"log"
 
 	"github.com/yourusername/go-react-memo-app/internal/domain/model"
@@ -25,17 +26,14 @@ func (u *FolderUsecase) CreateFolder(folder *dto.FolderRequestDTO, userID string
 		parentIDPtr = &folder.ParentFolderID
 	}
 
-	log.Println("ParentFolderID (DTO):", folder.ParentFolderID)
 	modelFolder := model.NewFolder(folder.Name, folder.Path, userID, parentIDPtr)
-	log.Println("usecase")
-	log.Println(*modelFolder.ParentFolderID())// この形式で参照したらいける
 
-	// ポインタをデリファレンスして値を表示
-	if parentID := modelFolder.ParentFolderID(); parentID != nil {
-		log.Println("ParentFolderID (モデル):", *parentID)
-	} else {
-		log.Println("ParentFolderID (モデル): nil")
-	}
+	// // ポインタをデリファレンスして値を表示
+	// if parentID := modelFolder.ParentFolderID(); parentID != nil {
+	// 	log.Println("ParentFolderID (モデル):", *parentID)
+	// } else {
+	// 	log.Println("ParentFolderID (モデル): nil")
+	// }
 	createdFolder, err := u.folderService.CreateFolder(modelFolder)
 	if err != nil {
 		return nil, err
@@ -65,6 +63,13 @@ func (u *FolderUsecase) GetFolderByID(id string) (*model.Folder, error) {
 }
 
 func (u *FolderUsecase) UpdateFolder(id string, folder *dto.FolderRequestDTO, userID string) ([]*model.Folder, error) {
+	registeredFolder, err := u.folderService.GetFolderByID(id)
+	if err != nil {
+		return nil, err
+	}
+	if registeredFolder.UserID() != userID {
+		return nil, errors.New("unauthorized")
+	}
 	// ParentFolderIDの処理
 	var parentIDPtr *string
 	if folder.ParentFolderID != "" {
@@ -72,8 +77,7 @@ func (u *FolderUsecase) UpdateFolder(id string, folder *dto.FolderRequestDTO, us
 	}
 
 	log.Println("ParentFolderID (DTO):", folder.ParentFolderID)
-	modelFolder := model.NewFolder(folder.Name, folder.Path, userID, parentIDPtr)
-	log.Println("usecase")
+	modelFolder := model.NewUpdateFolder(id, folder.Name, folder.Path, userID, parentIDPtr, registeredFolder.CreatedAt())
 
 	// ポインタをデリファレンスして値を表示
 	if parentID := modelFolder.ParentFolderID(); parentID != nil {
