@@ -61,13 +61,21 @@ func (r *NoteRepositoryImpl) GetNotesByFolderID(folderID string) ([]*model.Note,
 	return convertToDomainModelMany(gormNotes), nil
 }
 
+func (r *NoteRepositoryImpl) GetNotesByUserID(userID string) ([]*model.Note, error) {
+	var gormNotes []gormmodel.Note
+	if err := r.db.Where("user_id = ?", userID).Find(&gormNotes).Error; err != nil {
+		return nil, err
+	}
+	return convertToDomainModelMany(gormNotes), nil
+}
+
 func convertToGormModel(note *model.Note) *gormmodel.Note {
 	return &gormmodel.Note{
-		ID: note.ID(),
-		Title: note.Title(),
-		Content: note.Content(),
-		FolderID: note.FolderID(),
-		UserID: note.UserID(),
+		ID:        note.ID(),
+		Title:     note.Title(),
+		Content:   note.Content(),
+		FolderID:  note.FolderID(),
+		UserID:    note.UserID(),
 		CreatedAt: note.CreatedAt(),
 		UpdatedAt: note.UpdatedAt(),
 	}

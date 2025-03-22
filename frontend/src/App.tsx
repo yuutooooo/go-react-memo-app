@@ -1,51 +1,73 @@
 // src/App.js
-import React, { useState } from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import Top from "./pages/Top";
-import Home from "./pages/Home";
+import React from 'react';
+import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import { AuthProvider } from './contexts/AuthContext';
+import Login from './pages/Login';
+import Signup from './pages/Signup';
+import Home from './pages/Home';
+import ProtectedRoute from './components/ProtectedRoute';
 
-function App() {
-  // ログイン状態を管理するstate
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+// テーマの設定
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#3f51b5',
+    },
+    secondary: {
+      main: '#f50057',
+    },
+    background: {
+      default: '#f9fafb',
+    },
+  },
+  typography: {
+    fontFamily: [
+      '-apple-system',
+      'BlinkMacSystemFont',
+      '"Segoe UI"',
+      'Roboto',
+      '"Helvetica Neue"',
+      'Arial',
+      'sans-serif',
+    ].join(','),
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          textTransform: 'none',
+          borderRadius: 8,
+        },
+      },
+    },
+  },
+});
 
-  // ログイン状態をチェックする関数
-  const checkAuth = () => {
-    // 通常はローカルストレージやCookieからトークンを取得して検証します
-    // ここではusestateだけで簡易的に管理
-    return isLoggedIn;
-  };
-
-  // 認証が必要なルートをラップするコンポーネント
-  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-    if (!checkAuth()) {
-      // 認証されていない場合はログインページにリダイレクト
-      return <Navigate to="/login" replace />;
-    }
-    return <>{children}</>;
-  };
-
+const App: React.FC = () => {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Top />} />
-        <Route
-          path="/login"
-          element={<Login setIsLoggedIn={setIsLoggedIn} />}
-        />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/home" element={<Home />} />
-        {/* 存在しないパスの場合はホームにリダイレクト */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route
+              path="/home"
+              element={
+                <ProtectedRoute>
+                  <Home />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/" element={<Navigate to="/home" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
   );
-}
+};
 
 export default App;

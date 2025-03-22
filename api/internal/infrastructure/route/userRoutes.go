@@ -24,6 +24,7 @@ func SetupUserRoutes(e *echo.Group) {
 	e.GET("", userController.GetAllUser)
 	e.POST("/signup", userController.Signup)
 	e.POST("/signin", userController.Signin)
+	e.POST("/logout", userController.Logout)
 
 	// 認証が必要なルート
 	auth := e.Group("")
