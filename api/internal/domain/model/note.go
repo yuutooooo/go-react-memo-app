@@ -13,13 +13,25 @@ type Note struct {
 }
 
 // NewNote Noteエンティティを作成
-func NewNote(title, content, folderID, userID string) *Note {
+func NewNote(title, content, folderID string, userID string) *Note {
 	return &Note{
 		title:     title,
 		content:   content,
 		folderID:  folderID,
 		userID:    userID,
 		createdAt: time.Now(),
+		updatedAt: time.Now(),
+	}
+}
+
+func NewUpdateNote(id, title, content, folderID string, userID string, createdAt time.Time) *Note {
+	return &Note{
+		id:        id,
+		title:     title,
+		content:   content,
+		folderID:  folderID,
+		userID:    userID,
+		createdAt: createdAt,
 		updatedAt: time.Now(),
 	}
 }
@@ -34,6 +46,10 @@ func (n *Note) CreatedAt() time.Time { return n.createdAt }
 func (n *Note) UpdatedAt() time.Time { return n.updatedAt }
 
 // Setters
+func (n *Note) SetID(id string) {
+	n.id = id
+	n.updatedAt = time.Now()
+}
 func (n *Note) SetTitle(title string) {
 	n.title = title
 	n.updatedAt = time.Now()
@@ -45,4 +61,14 @@ func (n *Note) SetContent(content string) {
 func (n *Note) SetFolderID(folderID string) {
 	n.folderID = folderID
 	n.updatedAt = time.Now()
+}
+func (n *Note) SetUserID(userID string) {
+	n.userID = userID
+	n.updatedAt = time.Now()
+}
+func (n *Note) SetCreatedAt(createdAt time.Time) {
+	n.createdAt = createdAt
+}
+func (n *Note) SetUpdatedAt(updatedAt time.Time) {
+	n.updatedAt = updatedAt
 }

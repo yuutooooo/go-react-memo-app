@@ -12,4 +12,6 @@ func SetupRoutes(e *echo.Echo) {
 	SetupUserRoutes(userRouter)
 	folderRouter := e.Group("/folder")
 	SetupFolderRoutes(folderRouter)
+	noteRouter := e.Group("/note")
+	SetupNoteRoutes(noteRouter)
 }

@@ -35,16 +35,20 @@ func (u *User) UpdatedAt() time.Time { return u.updatedAt }
 // Setters
 func (u *User) SetName(name string) {
 	u.name = name
+	u.updatedAt = time.Now()
 }
 func (u *User) SetEmail(email string) {
 	u.email = email
+	u.updatedAt = time.Now()
 }
 func (u *User) SetPassword(password string) {
 	u.password = password
+	u.updatedAt = time.Now()
 }
 
 func (u *User) SetID(id string) {
 	u.id = id
+	u.updatedAt = time.Now()
 }
 
 func (u *User) SetCreatedAt(createdAt time.Time) {
