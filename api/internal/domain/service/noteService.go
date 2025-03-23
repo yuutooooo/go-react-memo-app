@@ -11,6 +11,7 @@ type NoteService interface {
 	UpdateNote(note *model.Note) (*model.Note, error)
 	DeleteNote(id string) error
 	GetNotesByUserID(userID string) ([]*model.Note, error)
+	GetNoteByUserID(userID string) ([]*model.Note, error)
 }
 
 type noteService struct {
@@ -56,6 +57,14 @@ func (s *noteService) DeleteNote(id string) error {
 }
 
 func (s *noteService) GetNotesByUserID(userID string) ([]*model.Note, error) {
+	notes, err := s.noteRepository.GetNotesByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+	return notes, nil
+}
+
+func (s *noteService) GetNoteByUserID(userID string) ([]*model.Note, error) {
 	notes, err := s.noteRepository.GetNotesByUserID(userID)
 	if err != nil {
 		return nil, err

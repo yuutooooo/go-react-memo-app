@@ -7,6 +7,7 @@ import { AuthProvider } from './contexts/AuthContext';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import Home from './pages/Home';
+import Landing from './pages/Landing';
 import ProtectedRoute from './components/ProtectedRoute';
 
 // テーマの設定
@@ -62,7 +63,7 @@ const App: React.FC = () => {
                 </ProtectedRoute>
               }
             />
-            <Route path="/" element={<Navigate to="/home" replace />} />
+            <Route path="/" element={<Landing />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>

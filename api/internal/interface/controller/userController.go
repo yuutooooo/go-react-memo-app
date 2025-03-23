@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -96,7 +97,23 @@ func (c *UserController) Signin(ctx echo.Context) error {
 }
 
 func (c *UserController) Index(ctx echo.Context) error {
-	response := dto.SuccessResponse(map[string]string{"message": "認証済みユーザーのみアクセス可能なページです"}, "認証成功")
+	userID := ctx.Get("user_id").(string)
+	if userID == "" {
+		return ctx.JSON(http.StatusUnauthorized, dto.ErrorResponse("ユーザーが見つかりません", errors.New("ユーザーが見つかりません")))
+	}
+	user, err := c.userUsecase.GetUserById(userID)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, dto.ErrorResponse("ユーザーの取得に失敗しました", err))
+	}
+	folders, notes, err := c.userUsecase.GetAllFolderAndNoteByUserID(userID)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, dto.ErrorResponse("フォルダーとノートの取得に失敗しました", err))
+	}
+	folderAndNoteTree, err := dto.CreateFolderNoteTree(folders, notes)
+	if err != nil {
+		return ctx.JSON(http.StatusInternalServerError, dto.ErrorResponse("フォルダーとノートのツリーの取得に失敗しました", err))
+	}
+	response := dto.CreateUserIndexResponse(*user, folderAndNoteTree)
 	return ctx.JSON(http.StatusOK, response)
 }
 

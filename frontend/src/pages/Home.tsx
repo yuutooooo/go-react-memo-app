@@ -1,21 +1,102 @@
 import React, { useEffect, useState } from "react";
-import { Container, Typography, Paper, Box } from "@mui/material";
+import { Container, Typography, Paper, Box, AppBar, Toolbar, IconButton } from "@mui/material";
+import { Menu as MenuIcon } from "@mui/icons-material";
 import SideBar from "../components/SideBar";
 import MarkdownEditor from "../components/MarkdownEditor";
 import { authenticatedApi } from "../api";
+import LogoutButton from "../components/LogoutButton";
+import Header from "../components/Header";
+
+// データ型の定義
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface NoteResponse {
+  id: string;
+  title: string;
+  content: string;
+  folder_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface FolderResponse {
+  id: string;
+  name: string;
+  path: string;
+  parentFolderID: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface FolderNoteTree {
+  folder: FolderResponse;
+  notes: NoteResponse[];
+  children: FolderNoteTree[];
+}
+
+interface UserIndexResponse {
+  user: User;
+  folderAndNoteTree: FolderNoteTree[];
+}
 
 const Home: React.FC = () => {
   const [markdownContent, setMarkdownContent] = useState<string>("");
-  // const [user, setUser] = useState<User | null>(null);
-  // const [folders, setFolders] = useState<Folder[]>([]);
+  const [userData, setUserData] = useState<User | null>(null);
+  const [folderTree, setFolderTree] = useState<FolderNoteTree[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [selectedNote, setSelectedNote] = useState<NoteResponse | null>(null);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const response = await authenticatedApi("GET", "user/index");
-      console.log(response);
+    const fetchUserData = async () => {
+      try {
+        setLoading(true);
+        const response = await authenticatedApi("GET", "user/index");
+        console.log(response);
+        
+        if (response && response.user && response.folderAndNoteTree) {
+          setUserData(response.user);
+          setFolderTree(response.folderAndNoteTree);
+          
+          // 初期表示するノートがあれば選択
+          if (response.folderAndNoteTree.length > 0) {
+            const firstFolderWithNotes = findFirstFolderWithNotes(response.folderAndNoteTree);
+            if (firstFolderWithNotes && firstFolderWithNotes.notes.length > 0) {
+              setSelectedNote(firstFolderWithNotes.notes[0]);
+              setMarkdownContent(firstFolderWithNotes.notes[0].content);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("データの取得に失敗しました:", error);
+      } finally {
+        setLoading(false);
+      }
     };
-    fetchUser();
+    
+    fetchUserData();
   }, []);
+
+  // 最初にノートを持つフォルダを見つける補助関数
+  const findFirstFolderWithNotes = (folders: FolderNoteTree[]): FolderNoteTree | null => {
+    for (const folder of folders) {
+      if (folder.notes.length > 0) {
+        return folder;
+      }
+      if (folder.children.length > 0) {
+        const childResult = findFirstFolderWithNotes(folder.children);
+        if (childResult) {
+          return childResult;
+        }
+      }
+    }
+    return null;
+  };
 
   const handleSave = (content: string) => {
     setMarkdownContent(content);
@@ -28,11 +109,22 @@ const Home: React.FC = () => {
     console.log("キャンセル");
   };
 
+  const handleNoteSelect = (note: NoteResponse) => {
+    setSelectedNote(note);
+    setMarkdownContent(note.content);
+  };
+
   return (
     <div className="min-h-screen bg-white">
-      <Box sx={{ display: "flex", height: "100vh" }}>
+      <Header />
+      <Box sx={{ display: "flex", height: "calc(100vh - 64px)" }}>
         {/* サイドバー */}
-        <SideBar />
+        <SideBar
+          folderTree={folderTree}
+          loading={loading}
+          onNoteSelect={handleNoteSelect}
+          selectedNote={selectedNote}
+        />
         
         {/* メインコンテンツ */}
         <Box 
@@ -62,7 +154,7 @@ const Home: React.FC = () => {
                   color: "#3f51b5"
                 }}
               >
-                メモエディタ
+                {selectedNote ? selectedNote.title : "メモエディタ"}
               </Typography>
               
               <MarkdownEditor

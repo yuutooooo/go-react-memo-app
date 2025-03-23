@@ -74,6 +74,56 @@
   margin-bottom: 16px;
 }
 
+/* 番号付きリストのスタイル強化 */
+.markdown-body ol {
+  list-style-type: decimal !important;
+  display: block !important;
+  counter-reset: item;
+}
+
+.markdown-body ol li {
+  display: list-item !important;
+  list-style-type: decimal !important;
+  position: relative;
+  margin-left: 1em;
+}
+
+/* ネストしたリストの表示を修正 */
+.markdown-body ol ol,
+.markdown-body ul ul,
+.markdown-body ol ul,
+.markdown-body ul ol {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.markdown-body ol ol li {
+  list-style-type: lower-alpha !important;
+}
+
+.markdown-body ol ol ol li {
+  list-style-type: lower-roman !important;
+}
+
+/* 箇条書きリストのスタイル強化 */
+.markdown-body ul {
+  list-style-type: disc !important;
+  display: block !important;
+}
+
+.markdown-body ul li {
+  display: list-item !important;
+  list-style-type: disc !important;
+}
+
+.markdown-body ul ul li {
+  list-style-type: circle !important;
+}
+
+.markdown-body ul ul ul li {
+  list-style-type: square !important;
+}
+
 .markdown-body table {
   display: block;
   width: 100%;

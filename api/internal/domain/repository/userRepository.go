@@ -8,4 +8,5 @@ type UserRepository interface {
 	GetAllUser() ([]model.User, error)
 	FindByEmail(email string) (*model.User, error)
 	CreateUser(user *model.User) (*model.User, error)
+	GetUserById(id string) (*model.User, error)
 }

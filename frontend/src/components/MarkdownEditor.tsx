@@ -187,20 +187,41 @@ function hello() {
       <hr style={{ border: 'none', height: '1px', backgroundColor: '#e0e0e0', margin: '24px 0' }} {...props} />
     ),
     ol: ({ node, children, ...props }: any) => (
-      <ol style={{ paddingLeft: '24px', margin: '16px 0' }} {...props}>
+      <ol className="ordered-list" style={{ 
+        paddingLeft: '24px', 
+        margin: '16px 0',
+        listStyleType: 'decimal',
+        display: 'block'
+      }} {...props}>
         {children}
       </ol>
     ),
     ul: ({ node, children, ...props }: any) => (
-      <ul className="list-disc pl-6 my-4" style={{ color: '#000' }} {...props}>
+      <ul className="list-disc pl-6 my-4" style={{ 
+        color: '#000',
+        listStyleType: 'disc',
+        display: 'block'
+      }} {...props}>
         {children}
       </ul>
     ),
-    li: ({ node, children, ...props }: any) => (
-      <li className="my-2" style={{ display: 'list-item' }} {...props}>
-        {children}
-      </li>
-    ),
+    li: ({ node, children, ordered, ...props }: any) => {
+      // 親要素がolかulかを確認
+      const isOrderedList = node.parent && node.parent.tagName === 'ol';
+      return (
+        <li 
+          className={isOrderedList ? "ordered-list-item" : "unordered-list-item"} 
+          style={{ 
+            display: 'list-item',
+            margin: '8px 0',
+            listStyleType: isOrderedList ? 'decimal' : 'disc'
+          }} 
+          {...props}
+        >
+          {children}
+        </li>
+      );
+    },
     code: ({ node, inline, className, children, ...props }: any) => {
       const match = /language-(\w+)/.exec(className || '');
       return !inline && match ? (

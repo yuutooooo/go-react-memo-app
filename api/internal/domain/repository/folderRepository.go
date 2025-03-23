@@ -9,5 +9,6 @@ type FolderRepository interface {
 	UpdateFolder(folder *model.Folder, id string) (*model.Folder, error)
 	DeleteFolder(id string) error
 	GetFolderByID(id string) (*model.Folder, error)
+	GetFolderByUserID(userID string) ([]*model.Folder, error)
 }
 

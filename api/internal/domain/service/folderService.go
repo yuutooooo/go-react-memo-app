@@ -12,6 +12,7 @@ type FolderService interface {
 	GetFolderByID(id string) (*model.Folder, error)
 	UpdateFolder(folder *model.Folder, id string) (*model.Folder, error)
 	DeleteFolder(id string) error
+	GetFolderByUserID(userID string) ([]*model.Folder, error)
 }
 
 type folderService struct {
@@ -70,4 +71,12 @@ func (s *folderService) DeleteFolder(id string) error {
 		return err
 	}
 	return nil
+}
+
+func (s *folderService) GetFolderByUserID(userID string) ([]*model.Folder, error) {
+	folders, err := s.folderRepository.GetFolderByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+	return folders, nil
 }

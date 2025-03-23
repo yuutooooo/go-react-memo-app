@@ -12,12 +12,16 @@ import (
 type UserUsecase struct {
 	userService    service.UserService
 	userRepository repository.UserRepository
+	folderService  service.FolderService
+	noteService    service.NoteService
 }
 
-func NewUserUsecase(userService service.UserService, userRepository repository.UserRepository) UserUsecase {
+func NewUserUsecase(userService service.UserService, userRepository repository.UserRepository, folderService service.FolderService, noteService service.NoteService) UserUsecase {
 	return UserUsecase{
 		userService:    userService,
 		userRepository: userRepository,
+		folderService:  folderService,
+		noteService:    noteService,
 	}
 }
 
@@ -67,4 +71,24 @@ func (u *UserUsecase) Login(req dto.LoginUserReq) (*model.User, string, error) {
 		return nil, "", err
 	}
 	return user, token, nil
+}
+
+func (u *UserUsecase) GetUserById(id string) (*model.User, error) {
+	user, err := u.userService.GetUserById(id)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (u *UserUsecase) GetAllFolderAndNoteByUserID(userID string) ([]*model.Folder, []*model.Note, error) {
+	folders, err := u.folderService.GetFolderByUserID(userID)
+	if err != nil {
+		return nil, nil, err
+	}
+	notes, err := u.noteService.GetNoteByUserID(userID)
+	if err != nil {
+		return nil, nil, err
+	}
+	return folders, notes, nil
 }
