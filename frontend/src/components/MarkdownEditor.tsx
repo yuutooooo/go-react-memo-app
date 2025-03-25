@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Box, Button, TextField, Tabs, Tab, Paper, Typography } from "@mui/material";
 // @ts-ignore
 import ReactMarkdown from 'react-markdown';
@@ -14,86 +14,95 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import '../pages/markdown.css';
 
 interface MarkdownEditorProps {
-  initialContent?: string;
+  noteContent?: string;
   onSave?: (content: string) => void;
   onCancel?: () => void;
 }
 
 const MarkdownEditor: React.FC<MarkdownEditorProps> = ({
-  initialContent,
+  noteContent,
   onSave,
   onCancel
 }) => {
-  const [markdownContent, setMarkdownContent] = useState<string>(
-    initialContent || 
-`# マークダウンエディタ
+  const defaultContent = 
+    `# マークダウンエディタ
 
-ここに**マークダウン**を入力できます。
+    ここに**マークダウン**を入力できます。
 
-## 見出し
+    ## 見出し
 
-### 小見出し
+    ### 小見出し
 
-## リスト
+    ## リスト
 
-- 項目1
-- 項目2
-  - ネストした項目
-  - もう一つのネスト項目
-- 項目3
+    - 項目1
+    - 項目2
+      - ネストした項目
+      - もう一つのネスト項目
+    - 項目3
 
-## 番号付きリスト
+    ## 番号付きリスト
 
-1. 最初の項目
-2. 2番目の項目
-3. 3番目の項目
+    1. 最初の項目
+    2. 2番目の項目
+    3. 3番目の項目
 
-## チェックボックス
+    ## チェックボックス
 
-- [x] 完了したタスク
-- [ ] 未完了のタスク
+    - [x] 完了したタスク
+    - [ ] 未完了のタスク
 
-## コード
+    ## コード
 
-インラインコード: \`const message = "Hello World";\`
+    インラインコード: \`const message = "Hello World";\`
 
-\`\`\`javascript
-// コードブロック
-function hello() {
-  console.log("Hello, world!");
-}
-\`\`\`
+    \`\`\`javascript
+    // コードブロック
+    function hello() {
+      console.log("Hello, world!");
+    }
+    \`\`\`
 
-## テーブル
+    ## テーブル
 
-| 名前 | 年齢 | 職業 |
-|------|------|------|
-| 田中 | 28   | エンジニア |
-| 佐藤 | 32   | デザイナー |
+    | 名前 | 年齢 | 職業 |
+    |------|------|------|
+    | 田中 | 28   | エンジニア |
+    | 佐藤 | 32   | デザイナー |
 
-## 引用
+    ## 引用
 
-> これは引用です。
-> 複数行にまたがります。
+    > これは引用です。
+    > 複数行にまたがります。
 
-## 水平線
+    ## 水平線
 
----
+    ---
 
-## リンク
+    ## リンク
 
-[Google](https://www.google.com)
+    [Google](https://www.google.com)
 
-## 画像
+    ## 画像
 
-画像も表示できます（URLを入力）
+    画像も表示できます（URLを入力）
 
-## HTML埋め込み
+    ## HTML埋め込み
 
-<div style="padding: 10px; background-color: #f0f0f0; border-radius: 5px;">
-  HTMLタグも使えます
-</div>
-`);
+    <div style="padding: 10px; background-color: #f0f0f0; border-radius: 5px;">
+      HTMLタグも使えます
+    </div>
+    `;
+
+  const [markdownContent, setMarkdownContent] = useState<string>(noteContent || defaultContent);
+
+  // noteContentの変更を監視
+  useEffect(() => {
+    if (noteContent) {
+      setMarkdownContent(noteContent);
+    }
+  }, [noteContent]);
+
   const [tabValue, setTabValue] = useState<number>(0);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -273,7 +282,22 @@ function hello() {
       <Tabs 
         value={tabValue} 
         onChange={handleTabChange} 
-        sx={{ mb: 2 }}
+        sx={{ 
+          mb: 3,
+          '& .MuiTabs-indicator': {
+            backgroundColor: '#3f51b5',
+            height: 3,
+          },
+          '& .MuiTab-root': {
+            textTransform: 'none',
+            fontWeight: 500,
+            fontSize: '1rem',
+            minWidth: 120,
+            '&.Mui-selected': {
+              color: '#3f51b5',
+            }
+          }
+        }}
         variant="fullWidth"
       >
         <Tab label="編集" />
@@ -295,7 +319,19 @@ function hello() {
             sx={{
               fontFamily: 'monospace',
               '& .MuiOutlinedInput-root': {
-                borderRadius: '8px',
+                borderRadius: '12px',
+                backgroundColor: '#ffffff',
+                '&:hover': {
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#3f51b5',
+                  }
+                },
+                '&.Mui-focused': {
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#3f51b5',
+                    borderWidth: 2,
+                  }
+                }
               }
             }}
           />
@@ -305,12 +341,27 @@ function hello() {
           <Paper
             elevation={0}
             sx={{
-              p: 3,
+              p: 4,
               minHeight: '600px',
               maxHeight: '800px',
               border: '1px solid #e0e0e0',
-              borderRadius: '8px',
-              overflowY: 'auto'
+              borderRadius: '12px',
+              overflowY: 'auto',
+              backgroundColor: '#ffffff',
+              '&::-webkit-scrollbar': {
+                width: '8px',
+              },
+              '&::-webkit-scrollbar-track': {
+                background: '#f1f1f1',
+                borderRadius: '4px',
+              },
+              '&::-webkit-scrollbar-thumb': {
+                background: '#c1c1c1',
+                borderRadius: '4px',
+                '&:hover': {
+                  background: '#a8a8a8',
+                }
+              }
             }}
           >
             <MarkdownRenderer content={markdownContent} />
@@ -318,7 +369,7 @@ function hello() {
         )}
 
         {tabValue === 2 && (
-          <Box sx={{ display: 'flex', gap: 2 }}>
+          <Box sx={{ display: 'flex', gap: 3 }}>
             <TextField
               fullWidth
               multiline
@@ -330,19 +381,49 @@ function hello() {
               placeholder="マークダウンを入力してください..."
               sx={{ 
                 width: '50%',
-                fontFamily: 'monospace' 
+                fontFamily: 'monospace',
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '12px',
+                  backgroundColor: '#ffffff',
+                  '&:hover': {
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#3f51b5',
+                    }
+                  },
+                  '&.Mui-focused': {
+                    '& .MuiOutlinedInput-notchedOutline': {
+                      borderColor: '#3f51b5',
+                      borderWidth: 2,
+                    }
+                  }
+                }
               }}
             />
             <Paper
               elevation={0}
               sx={{
-                p: 3,
+                p: 4,
                 width: '50%',
                 minHeight: '600px',
                 maxHeight: '800px',
                 border: '1px solid #e0e0e0',
-                borderRadius: '8px',
-                overflowY: 'auto'
+                borderRadius: '12px',
+                overflowY: 'auto',
+                backgroundColor: '#ffffff',
+                '&::-webkit-scrollbar': {
+                  width: '8px',
+                },
+                '&::-webkit-scrollbar-track': {
+                  background: '#f1f1f1',
+                  borderRadius: '4px',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  background: '#c1c1c1',
+                  borderRadius: '4px',
+                  '&:hover': {
+                    background: '#a8a8a8',
+                  }
+                }
               }}
             >
               <MarkdownRenderer content={markdownContent} />
@@ -351,18 +432,27 @@ function hello() {
         )}
       </Box>
 
-      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+      <Box sx={{ 
+        display: 'flex', 
+        justifyContent: 'space-between',
+        mt: 4,
+        px: 1
+      }}>
         <Button 
           variant="outlined" 
           color="primary"
           onClick={handleCancel}
           sx={{
             borderRadius: "28px",
-            px: 3,
-            py: 1,
+            px: 4,
+            py: 1.5,
             borderWidth: 2,
+            textTransform: 'none',
+            fontSize: '1rem',
+            fontWeight: 500,
             '&:hover': {
-              borderWidth: 2
+              borderWidth: 2,
+              backgroundColor: 'rgba(63, 81, 181, 0.04)'
             }
           }}
         >
@@ -375,11 +465,15 @@ function hello() {
           onClick={handleSave}
           sx={{
             borderRadius: "28px",
-            px: 3,
-            py: 1,
+            px: 4,
+            py: 1.5,
+            textTransform: 'none',
+            fontSize: '1rem',
+            fontWeight: 500,
             boxShadow: '0 4px 10px rgba(63, 81, 181, 0.2)',
             '&:hover': {
-              boxShadow: '0 6px 12px rgba(63, 81, 181, 0.3)'
+              boxShadow: '0 6px 12px rgba(63, 81, 181, 0.3)',
+              backgroundColor: '#303f9f'
             }
           }}
         >

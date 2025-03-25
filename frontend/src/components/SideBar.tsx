@@ -67,11 +67,11 @@ const SideBar: React.FC<SideBarProps> = ({
   folderTree, 
   loading, 
   onNoteSelect,
-  selectedNote
+  selectedNote,
 }) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
+
   // 状態管理
   const [expandedNodes, setExpandedNodes] = useState<Record<string, boolean>>({});
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -138,7 +138,6 @@ const SideBar: React.FC<SideBarProps> = ({
   const handleNoteClick = (note: NoteResponse) => {
     setSelectedNodeId(note.id);
     onNoteSelect(note);
-    
     // モバイル表示の場合はサイドバーを閉じる
     if (isMobile) {
       setMobileOpen(false);
@@ -265,11 +264,23 @@ const SideBar: React.FC<SideBarProps> = ({
   const sidebarContent = (
     <>
       <Box sx={{ p: 2 }}>
-        <Typography variant="h6" component="h2" sx={{ fontWeight: 600, mb: 1 }}>
+        <Typography 
+          variant="h6" 
+          component="h2" 
+          sx={{ 
+            fontWeight: 700, 
+            mb: 1,
+            background: "linear-gradient(45deg, #3f51b5, #2196f3)",
+            backgroundClip: "text",
+            WebkitBackgroundClip: "text",
+            color: "transparent",
+            textShadow: "0 2px 4px rgba(0,0,0,0.1)"
+          }}
+        >
           フォルダとノート
         </Typography>
         
-        <Divider sx={{ mb: 2 }} />
+        <Divider sx={{ mb: 2, borderColor: "rgba(0, 0, 0, 0.1)" }} />
         
         {/* アクションボタン */}
         <Box
@@ -289,7 +300,16 @@ const SideBar: React.FC<SideBarProps> = ({
                 handleCreateDialogOpen("folder");
               }
             }}
-            sx={{ borderRadius: '20px' }}
+            sx={{ 
+              borderRadius: '20px',
+              borderWidth: 2,
+              textTransform: 'none',
+              fontWeight: 500,
+              '&:hover': {
+                borderWidth: 2,
+                backgroundColor: 'rgba(63, 81, 181, 0.04)'
+              }
+            }}
           >
             新規フォルダ
           </Button>
@@ -303,13 +323,22 @@ const SideBar: React.FC<SideBarProps> = ({
                 handleCreateDialogOpen("file");
               }
             }}
-            sx={{ borderRadius: '20px' }}
+            sx={{ 
+              borderRadius: '20px',
+              borderWidth: 2,
+              textTransform: 'none',
+              fontWeight: 500,
+              '&:hover': {
+                borderWidth: 2,
+                backgroundColor: 'rgba(63, 81, 181, 0.04)'
+              }
+            }}
           >
             新規ノート
           </Button>
         </Box>
         
-        <Divider sx={{ mb: 2 }} />
+        <Divider sx={{ mb: 2, borderColor: "rgba(0, 0, 0, 0.1)" }} />
       </Box>
 
       {/* フォルダ構造 */}
@@ -324,7 +353,24 @@ const SideBar: React.FC<SideBarProps> = ({
           </Typography>
         </Box>
       ) : (
-        <Box sx={{ overflow: 'auto', maxHeight: 'calc(100vh - 220px)' }}>
+        <Box sx={{ 
+          overflow: 'auto', 
+          maxHeight: 'calc(100vh - 220px)',
+          '&::-webkit-scrollbar': {
+            width: '8px',
+          },
+          '&::-webkit-scrollbar-track': {
+            background: '#f1f1f1',
+            borderRadius: '4px',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: '#c1c1c1',
+            borderRadius: '4px',
+            '&:hover': {
+              background: '#a8a8a8',
+            }
+          }
+        }}>
           {renderFolderTree(folderTree)}
         </Box>
       )}
@@ -335,8 +381,21 @@ const SideBar: React.FC<SideBarProps> = ({
         onClose={() => setCreateDialogOpen(false)}
         fullWidth
         maxWidth="xs"
+        PaperProps={{
+          sx: {
+            borderRadius: '16px',
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+          }
+        }}
       >
-        <DialogTitle>
+        <DialogTitle sx={{ 
+          fontWeight: 600,
+          background: "linear-gradient(45deg, #3f51b5, #2196f3)",
+          backgroundClip: "text",
+          WebkitBackgroundClip: "text",
+          color: "transparent",
+        }}>
           {createType === "folder" ? "新規フォルダの作成" : "新規ノートの作成"}
         </DialogTitle>
         <DialogContent>
@@ -349,20 +408,59 @@ const SideBar: React.FC<SideBarProps> = ({
             value={newItemName}
             onChange={(e) => setNewItemName(e.target.value)}
             placeholder={createType === "folder" ? "新しいフォルダ" : "新しいノート"}
-            sx={{ mt: 1 }}
+            sx={{ 
+              mt: 1,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '12px',
+                '&:hover': {
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#3f51b5',
+                  }
+                },
+                '&.Mui-focused': {
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#3f51b5',
+                    borderWidth: 2,
+                  }
+                }
+              }
+            }}
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCreateDialogOpen(false)}>キャンセル</Button>
+        <DialogActions sx={{ p: 3 }}>
+          <Button 
+            onClick={() => setCreateDialogOpen(false)}
+            sx={{
+              borderRadius: '20px',
+              textTransform: 'none',
+              fontWeight: 500,
+              px: 3,
+              '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, 0.04)'
+              }
+            }}
+          >
+            キャンセル
+          </Button>
           <Button
             onClick={() => {
-              // TODO: APIを呼び出して新規作成処理を行う
               console.log("Create", createType, newItemName, selectedFolder);
               setCreateDialogOpen(false);
             }}
             variant="contained"
             color="primary"
             disabled={!newItemName.trim()}
+            sx={{
+              borderRadius: '20px',
+              textTransform: 'none',
+              fontWeight: 500,
+              px: 3,
+              boxShadow: '0 4px 10px rgba(63, 81, 181, 0.2)',
+              '&:hover': {
+                boxShadow: '0 6px 12px rgba(63, 81, 181, 0.3)',
+                backgroundColor: '#303f9f'
+              }
+            }}
           >
             作成
           </Button>
@@ -374,20 +472,50 @@ const SideBar: React.FC<SideBarProps> = ({
         anchorEl={anchorEl}
         open={Boolean(anchorEl)}
         onClose={handleMenuClose}
+        PaperProps={{
+          sx: {
+            borderRadius: '12px',
+            mt: 1,
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+          }
+        }}
       >
         <MenuItem
           onClick={() => handleCreateDialogOpen("folder")}
-          sx={{ minWidth: 150 }}
+          sx={{ 
+            minWidth: 150,
+            py: 1.5,
+            '&:hover': {
+              backgroundColor: 'rgba(63, 81, 181, 0.08)'
+            }
+          }}
         >
-          <NewFolderIcon fontSize="small" sx={{ mr: 1 }} />
+          <NewFolderIcon fontSize="small" sx={{ mr: 1, color: '#3f51b5' }} />
           フォルダ作成
         </MenuItem>
-        <MenuItem onClick={() => handleCreateDialogOpen("file")}>
-          <NewFileIcon fontSize="small" sx={{ mr: 1 }} />
+        <MenuItem 
+          onClick={() => handleCreateDialogOpen("file")}
+          sx={{ 
+            py: 1.5,
+            '&:hover': {
+              backgroundColor: 'rgba(63, 81, 181, 0.08)'
+            }
+          }}
+        >
+          <NewFileIcon fontSize="small" sx={{ mr: 1, color: '#3f51b5' }} />
           ノート作成
         </MenuItem>
-        <Divider />
-        <MenuItem onClick={handleMenuClose} sx={{ color: "error.main" }}>
+        <Divider sx={{ my: 1 }} />
+        <MenuItem 
+          onClick={handleMenuClose} 
+          sx={{ 
+            color: "error.main",
+            py: 1.5,
+            '&:hover': {
+              backgroundColor: 'rgba(211, 47, 47, 0.08)'
+            }
+          }}
+        >
           <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
           削除
         </MenuItem>
@@ -443,10 +571,12 @@ const SideBar: React.FC<SideBarProps> = ({
       sx={{
         width: 280,
         height: "100%",
-        borderRight: "1px solid #e0e0e0",
+        borderRight: "1px solid rgba(0, 0, 0, 0.1)",
         overflow: "hidden",
         display: "flex",
         flexDirection: "column",
+        background: "rgba(255, 255, 255, 0.9)",
+        backdropFilter: "blur(10px)",
       }}
     >
       {sidebarContent}

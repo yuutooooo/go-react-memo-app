@@ -1,10 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Container, Typography, Paper, Box, AppBar, Toolbar, IconButton } from "@mui/material";
-import { Menu as MenuIcon } from "@mui/icons-material";
+import { Container, Typography, Paper, Box } from "@mui/material";
 import SideBar from "../components/SideBar";
 import MarkdownEditor from "../components/MarkdownEditor";
 import { authenticatedApi } from "../api";
-import LogoutButton from "../components/LogoutButton";
 import Header from "../components/Header";
 
 // データ型の定義
@@ -51,6 +49,7 @@ const Home: React.FC = () => {
   const [folderTree, setFolderTree] = useState<FolderNoteTree[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedNote, setSelectedNote] = useState<NoteResponse | null>(null);
+  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -58,27 +57,30 @@ const Home: React.FC = () => {
         setLoading(true);
         const response = await authenticatedApi("GET", "user/index");
         console.log(response);
-        
+
         if (response && response.user && response.folderAndNoteTree) {
           setUserData(response.user);
           setFolderTree(response.folderAndNoteTree);
-          
+
           // 初期表示するノートがあれば選択
           if (response.folderAndNoteTree.length > 0) {
             const firstFolderWithNotes = findFirstFolderWithNotes(response.folderAndNoteTree);
             if (firstFolderWithNotes && firstFolderWithNotes.notes.length > 0) {
-              setSelectedNote(firstFolderWithNotes.notes[0]);
-              setMarkdownContent(firstFolderWithNotes.notes[0].content);
+              const firstNote = firstFolderWithNotes.notes[0];
+              setSelectedNote(firstNote);
+              setSelectedNoteId(firstNote.id);
+              setMarkdownContent(firstNote.content);
             }
           }
         }
+        console.log(selectedNote)
       } catch (error) {
         console.error("データの取得に失敗しました:", error);
       } finally {
         setLoading(false);
       }
     };
-    
+
     fetchUserData();
   }, []);
 
@@ -111,13 +113,19 @@ const Home: React.FC = () => {
 
   const handleNoteSelect = (note: NoteResponse) => {
     setSelectedNote(note);
+    setSelectedNoteId(note.id);
     setMarkdownContent(note.content);
+    console.log(note.content)
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Header />
-      <Box sx={{ display: "flex", height: "calc(100vh - 64px)" }}>
+      <Box sx={{ 
+        display: "flex", 
+        height: "calc(100vh - 64px)",
+        background: "linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%)"
+      }}>
         {/* サイドバー */}
         <SideBar
           folderTree={folderTree}
@@ -132,7 +140,7 @@ const Home: React.FC = () => {
             flexGrow: 1, 
             overflow: "auto",
             p: { xs: 2, sm: 3 },
-            backgroundColor: "#f9fafc"
+            background: "linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%)"
           }}
         >
           <Container maxWidth="lg" sx={{ py: 3 }}>
@@ -140,25 +148,37 @@ const Home: React.FC = () => {
               elevation={0} 
               sx={{ 
                 p: 4, 
-                borderRadius: "12px",
-                boxShadow: "0 2px 12px rgba(0,0,0,0.05)"
+                borderRadius: "16px",
+                background: "rgba(255, 255, 255, 0.9)",
+                backdropFilter: "blur(10px)",
+                boxShadow: "0 8px 32px rgba(0, 0, 0, 0.1)",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  boxShadow: "0 12px 48px rgba(0, 0, 0, 0.15)",
+                  transform: "translateY(-2px)"
+                }
               }}
             >
               <Typography 
                 variant="h4" 
                 component="h1" 
                 sx={{ 
-                  mb: 3, 
-                  fontWeight: 600,
+                  mb: 4, 
+                  fontWeight: 700,
                   textAlign: "center",
-                  color: "#3f51b5"
+                  background: "linear-gradient(45deg, #3f51b5, #2196f3)",
+                  backgroundClip: "text",
+                  WebkitBackgroundClip: "text",
+                  color: "transparent",
+                  textShadow: "0 2px 4px rgba(0,0,0,0.1)"
                 }}
               >
                 {selectedNote ? selectedNote.title : "メモエディタ"}
               </Typography>
               
               <MarkdownEditor
-                initialContent={markdownContent}
+                noteContent={markdownContent}
                 onSave={handleSave}
                 onCancel={handleCancel}
               />
