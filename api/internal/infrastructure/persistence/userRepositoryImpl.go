@@ -40,6 +40,14 @@ func (r *UserRepositoryImpl) CreateUser(user *model.User) (*model.User, error) {
 	return userModel, nil
 }
 
+func (r *UserRepositoryImpl) GetUserById(id string) (*model.User, error) {
+	var user gormmodel.User
+	if err := r.db.Where("id = ?", id).First(&user).Error; err != nil {
+		return nil, err
+	}
+	return convertToUserModel(user), nil
+}
+
 // gormmodelからusermodelに変換
 func convertToUserModelMany(gormUsers []gormmodel.User) []model.User {
 	userModels := make([]model.User, len(gormUsers))

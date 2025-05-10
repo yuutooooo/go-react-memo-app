@@ -12,6 +12,7 @@ import {
   Divider,
   useMediaQuery,
   useTheme,
+  Grid,
 } from "@mui/material";
 import {
   Email as EmailIcon,
@@ -21,55 +22,30 @@ import {
   ArrowBack as ArrowBackIcon,
 } from "@mui/icons-material";
 import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
-interface LoginProps {
-  setIsLoggedIn?: (isLoggedIn: boolean) => void;
-}
-
-const Login: React.FC<LoginProps> = ({ setIsLoggedIn }) => {
+const Login: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { login } = useAuth();
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-  const handleClickShowPassword = () => {
-    setShowPassword(!showPassword);
-  };
-
-  const handleClickShowConfirmPassword = () => {
-    setShowConfirmPassword(!showConfirmPassword);
-  };
-
-  const handleLogin = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
 
-    // 簡単な検証
-    if (!email || !password || !confirmPassword) {
-      setError("全てのフィールドに入力してください");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError("パスワードが一致しません");
-      return;
-    }
-
-    // ここでは簡単に成功したとみなします
-    // 実際はAPIに接続してログイン処理を行います
-    if (email === "test@example.com" && password === "password") {
-      // ログイン成功
-      if (setIsLoggedIn) {
-        setIsLoggedIn(true);
-      }
-      navigate("/memos");
-    } else {
-      // ログイン失敗
-      setError("メールアドレスまたはパスワードが正しくありません");
+    try {
+      await login(email, password);
+      navigate("/home");
+    } catch (error: any) {
+      setError(error.message || "ログインに失敗しました");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -131,129 +107,40 @@ const Login: React.FC<LoginProps> = ({ setIsLoggedIn }) => {
               </Alert>
             )}
 
-            <form onSubmit={handleLogin}>
+            <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
               <TextField
+                margin="normal"
+                required
+                fullWidth
                 label="メールアドレス"
                 type="email"
-                fullWidth
-                margin="normal"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="例: user@example.com"
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <EmailIcon sx={{ color: "#3f51b5" }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "8px",
-                    "&:hover fieldset": {
-                      borderColor: "#3f51b5",
-                    },
-                  },
-                }}
+                autoComplete="email"
+                autoFocus
               />
-
+              
               <TextField
-                label="パスワード"
-                type={showPassword ? "text" : "password"}
-                fullWidth
                 margin="normal"
+                required
+                fullWidth
+                label="パスワード"
+                type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LockIcon sx={{ color: "#3f51b5" }} />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={handleClickShowPassword}
-                        edge="end"
-                        size="small"
-                      >
-                        {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "8px",
-                    "&:hover fieldset": {
-                      borderColor: "#3f51b5",
-                    },
-                  },
-                }}
+                autoComplete="current-password"
               />
-
-              <TextField
-                label="パスワード確認"
-                type={showConfirmPassword ? "text" : "password"}
-                fullWidth
-                margin="normal"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <LockIcon sx={{ color: "#3f51b5" }} />
-                    </InputAdornment>
-                  ),
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        onClick={handleClickShowConfirmPassword}
-                        edge="end"
-                        size="small"
-                      >
-                        {showConfirmPassword ? (
-                          <VisibilityOffIcon />
-                        ) : (
-                          <VisibilityIcon />
-                        )}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: "8px",
-                    "&:hover fieldset": {
-                      borderColor: "#3f51b5",
-                    },
-                  },
-                }}
-              />
-
+              
               <Button
                 type="submit"
-                variant="contained"
-                color="primary"
                 fullWidth
-                size="large"
-                sx={{
-                  mt: 4,
-                  mb: 2,
-                  borderRadius: "28px",
-                  py: 1.2,
-                  boxShadow: "0 4px 14px 0 rgba(0,118,255,0.39)",
-                  backgroundColor: "#3f51b5",
-                  fontSize: "1rem",
-                  fontWeight: 600,
-                  "&:hover": {
-                    backgroundColor: "#303f9f",
-                  },
-                }}
+                variant="contained"
+                sx={{ mt: 3, mb: 2, py: 1.5 }}
+                disabled={loading}
               >
-                ログイン
+                {loading ? 'ログイン中...' : 'ログイン'}
               </Button>
-            </form>
+            </Box>
 
             <Divider sx={{ my: 3 }}>
               <Typography variant="body2" color="textSecondary">

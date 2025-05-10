@@ -55,7 +55,7 @@ func (c *Container) initialize() {
 	c.noteService = service.NewNoteService(c.noteRepository)
 
 	// ユースケースの初期化
-	c.userUsecase = usecase.NewUserUsecase(c.userService, c.userRepository)
+	c.userUsecase = usecase.NewUserUsecase(c.userService, c.userRepository, c.folderService, c.noteService)
 	c.folderUsecase = usecase.NewFolderUsecase(c.folderService)
 	c.noteUsecase = usecase.NewNoteUsecase(c.noteService)
 

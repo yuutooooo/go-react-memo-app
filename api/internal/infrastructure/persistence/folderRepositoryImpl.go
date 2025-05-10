@@ -66,6 +66,14 @@ func (r *FolderRepositoryImpl) GetFolderByID(id string) (*model.Folder, error) {
 	return convertToFolderModel(gormFolder), nil
 }
 
+func (r *FolderRepositoryImpl) GetFolderByUserID(userID string) ([]*model.Folder, error) {
+	var gormFolders []gormmodel.Folder
+	if err := r.db.Where("user_id = ?", userID).Find(&gormFolders).Error; err != nil {
+		return nil, err
+	}
+	return convertToFolderModelList(gormFolders), nil
+}
+
 func convertToGormFolder(folder *model.Folder) *gormmodel.Folder {
 	var gormFolder gormmodel.Folder
 	var parentID *string

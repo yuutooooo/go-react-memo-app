@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -14,6 +14,10 @@ import {
   Divider,
   Paper,
   Tooltip,
+  CircularProgress,
+  Drawer,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import {
   FolderOutlined as FolderIcon,
@@ -24,91 +28,90 @@ import {
   ChevronRight as ExpandIcon,
   ExpandMore as CollapseIcon,
   Delete as DeleteIcon,
+  Menu as MenuIcon,
 } from "@mui/icons-material";
 
-// ディレクトリ構造のインターフェース
-interface FileNode {
+// インターフェース定義
+interface NoteResponse {
   id: string;
-  name: string;
-  type: "file" | "folder";
-  children?: FileNode[];
+  title: string;
+  content: string;
+  folder_id: string;
+  created_at: string;
+  updated_at: string;
 }
 
-// モックデータ - 実際のアプリケーションではAPIから取得します
-const initialFileStructure: FileNode[] = [
-  {
-    id: "1",
-    name: "プロジェクト",
-    type: "folder",
-    children: [
-      {
-        id: "2",
-        name: "ドキュメント",
-        type: "folder",
-        children: [
-          { id: "3", name: "仕様書.md", type: "file" },
-          { id: "4", name: "議事録.md", type: "file" },
-        ],
-      },
-      {
-        id: "5",
-        name: "ソースコード",
-        type: "folder",
-        children: [
-          { id: "6", name: "app.js", type: "file" },
-          { id: "7", name: "utils.js", type: "file" },
-          {
-            id: "8",
-            name: "components",
-            type: "folder",
-            children: [
-              { id: "9", name: "Button.jsx", type: "file" },
-              { id: "10", name: "Modal.jsx", type: "file" },
-            ],
-          },
-        ],
-      },
-      { id: "11", name: "README.md", type: "file" },
-    ],
-  },
-  {
-    id: "12",
-    name: "個人メモ",
-    type: "folder",
-    children: [
-      { id: "13", name: "アイデア.md", type: "file" },
-      { id: "14", name: "タスク.md", type: "file" },
-    ],
-  },
-];
+interface FolderResponse {
+  id: string;
+  name: string;
+  path: string;
+  parentFolderID: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
-const SideBar: React.FC = () => {
+interface FolderNoteTree {
+  folder: FolderResponse;
+  notes: NoteResponse[];
+  children: FolderNoteTree[];
+}
+
+interface SideBarProps {
+  folderTree: FolderNoteTree[];
+  loading: boolean;
+  onNoteSelect: (note: NoteResponse) => void;
+  selectedNote: NoteResponse | null;
+}
+
+const SideBar: React.FC<SideBarProps> = ({ 
+  folderTree, 
+  loading, 
+  onNoteSelect,
+  selectedNote,
+}) => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
   // 状態管理
-  const [fileStructure, setFileStructure] = useState<FileNode[]>(initialFileStructure);
   const [expandedNodes, setExpandedNodes] = useState<Record<string, boolean>>({});
-  const [selectedNode, setSelectedNode] = useState<FileNode | null>(null);
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [createType, setCreateType] = useState<"file" | "folder">("file");
   const [newItemName, setNewItemName] = useState("");
-  const [currentParentId, setCurrentParentId] = useState<string | null>(null);
+  const [selectedFolder, setSelectedFolder] = useState<FolderResponse | null>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  
+  // 初期状態でいくつかのフォルダを開いておく
+  useEffect(() => {
+    if (folderTree.length > 0) {
+      const initialExpanded: Record<string, boolean> = {};
+      // ルートフォルダを展開
+      folderTree.forEach(item => {
+        initialExpanded[item.folder.id] = true;
+        
+        // ノートを持つフォルダを展開
+        if (item.notes.length > 0) {
+          initialExpanded[item.folder.id] = true;
+        }
+      });
+      setExpandedNodes(initialExpanded);
+    }
+  }, [folderTree]);
 
   // ノードを展開/折りたたむ関数
-  const toggleNodeExpansion = (nodeId: string, e: React.MouseEvent) => {
+  const toggleNodeExpansion = (folderId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setExpandedNodes((prev) => ({
+    setExpandedNodes(prev => ({
       ...prev,
-      [nodeId]: !prev[nodeId],
+      [folderId]: !prev[folderId]
     }));
   };
 
   // メニューを開く関数
-  const handleMenuOpen = (
-    node: FileNode,
-    e: React.MouseEvent<HTMLButtonElement>
-  ) => {
+  const handleMenuOpen = (folder: FolderResponse, e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
-    setSelectedNode(node);
+    setSelectedFolder(folder);
     setAnchorEl(e.currentTarget);
   };
 
@@ -125,62 +128,32 @@ const SideBar: React.FC = () => {
     handleMenuClose();
   };
 
-  // ノードをクリックしたときの関数
-  const handleNodeClick = (node: FileNode) => {
-    if (node.type === "folder") {
-      toggleNodeExpansion(node.id, { stopPropagation: () => {} } as React.MouseEvent);
-    } else {
-      // ファイルを選択した場合の処理
-      console.log("ファイルを選択:", node.name);
+  // フォルダをクリックしたときの関数
+  const handleFolderClick = (folder: FolderResponse, e: React.MouseEvent) => {
+    toggleNodeExpansion(folder.id, e);
+    setSelectedNodeId(folder.id);
+  };
+
+  // ノートをクリックしたときの関数
+  const handleNoteClick = (note: NoteResponse) => {
+    setSelectedNodeId(note.id);
+    onNoteSelect(note);
+    // モバイル表示の場合はサイドバーを閉じる
+    if (isMobile) {
+      setMobileOpen(false);
     }
   };
 
-  // 新しいファイル/フォルダを追加する関数
-  const handleCreateItem = () => {
-    if (!newItemName.trim() || !selectedNode) {
-      return;
-    }
-
-    const newId = Date.now().toString();
-    const newItem: FileNode = {
-      id: newId,
-      name: newItemName,
-      type: createType,
-      ...(createType === "folder" && { children: [] }),
-    };
-
-    // フォルダ構造を更新する関数
-    const updateFolderStructure = (nodes: FileNode[]): FileNode[] => {
-      return nodes.map((node) => {
-        if (node.id === selectedNode.id && node.type === "folder") {
-          return {
-            ...node,
-            children: [...(node.children || []), newItem],
-          };
-        } else if (node.children) {
-          return {
-            ...node,
-            children: updateFolderStructure(node.children),
-          };
-        }
-        return node;
-      });
-    };
-
-    setFileStructure(updateFolderStructure(fileStructure));
-    setCreateDialogOpen(false);
-    
-    // 親フォルダを展開
-    setExpandedNodes((prev) => ({
-      ...prev,
-      [selectedNode.id]: true,
-    }));
+  // モバイル表示のトグル
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
   };
 
-  // フォルダ構造を再帰的にレンダリングする関数
-  const renderFileStructure = (nodes: FileNode[], level: number = 0) => {
-    return nodes.map((node) => (
-      <Box key={node.id}>
+  // フォルダとノートのツリーを再帰的にレンダリングする関数
+  const renderFolderTree = (items: FolderNoteTree[], level: number = 0) => {
+    return items.map(item => (
+      <React.Fragment key={item.folder.id}>
+        {/* フォルダ */}
         <Box
           sx={{
             display: "flex",
@@ -189,33 +162,30 @@ const SideBar: React.FC = () => {
             pl: 1 + level * 2,
             cursor: "pointer",
             borderRadius: "4px",
+            transition: "background-color 0.2s",
             "&:hover": {
               backgroundColor: "rgba(0, 0, 0, 0.04)",
             },
-            ...(selectedNode?.id === node.id && {
+            ...(selectedNodeId === item.folder.id && {
               backgroundColor: "rgba(63, 81, 181, 0.08)",
             }),
           }}
-          onClick={() => handleNodeClick(node)}
+          onClick={(e) => handleFolderClick(item.folder, e)}
         >
-          {node.type === "folder" && (
-            <IconButton
-              size="small"
-              onClick={(e) => toggleNodeExpansion(node.id, e)}
-              sx={{ mr: 0.5 }}
-            >
-              {expandedNodes[node.id] ? (
-                <CollapseIcon fontSize="small" />
-              ) : (
-                <ExpandIcon fontSize="small" />
-              )}
-            </IconButton>
-          )}
-          {node.type === "folder" ? (
-            <FolderIcon sx={{ mr: 1, color: "#3f51b5" }} />
-          ) : (
-            <FileIcon sx={{ mr: 1, color: "#607d8b" }} />
-          )}
+          <IconButton
+            size="small"
+            onClick={(e) => toggleNodeExpansion(item.folder.id, e)}
+            sx={{ mr: 0.5 }}
+          >
+            {expandedNodes[item.folder.id] ? (
+              <CollapseIcon fontSize="small" />
+            ) : (
+              <ExpandIcon fontSize="small" />
+            )}
+          </IconButton>
+          
+          <FolderIcon sx={{ mr: 1, color: "#3f51b5" }} />
+          
           <Typography
             variant="body2"
             sx={{
@@ -223,110 +193,187 @@ const SideBar: React.FC = () => {
               overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
+              fontWeight: item.notes.length > 0 ? 600 : 400,
             }}
           >
-            {node.name}
+            {item.folder.name}
+            {item.notes.length > 0 && (
+              <Typography component="span" sx={{ ml: 1, color: "text.secondary", fontSize: '0.8rem' }}>
+                ({item.notes.length})
+              </Typography>
+            )}
           </Typography>
-          {node.type === "folder" && (
-            <Tooltip title="メニュー">
-              <IconButton
-                size="small"
-                onClick={(e) => handleMenuOpen(node, e)}
-              >
-                <MoreIcon fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          )}
+          
+          <Tooltip title="メニュー">
+            <IconButton
+              size="small"
+              onClick={(e) => handleMenuOpen(item.folder, e)}
+            >
+              <MoreIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
         </Box>
-        {node.children &&
-          expandedNodes[node.id] &&
-          renderFileStructure(node.children, level + 1)}
-      </Box>
+
+        {/* 展開されていれば子要素を表示 */}
+        {expandedNodes[item.folder.id] && (
+          <>
+            {/* ノート */}
+            {item.notes.map(note => (
+              <Box
+                key={note.id}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  p: 1,
+                  pl: 4 + level * 2,
+                  cursor: "pointer",
+                  borderRadius: "4px",
+                  transition: "background-color 0.2s",
+                  "&:hover": {
+                    backgroundColor: "rgba(0, 0, 0, 0.04)",
+                  },
+                  ...(selectedNodeId === note.id && {
+                    backgroundColor: "rgba(63, 81, 181, 0.08)",
+                  }),
+                }}
+                onClick={() => handleNoteClick(note)}
+              >
+                <FileIcon sx={{ mr: 1, color: "#607d8b" }} />
+                <Typography
+                  variant="body2"
+                  sx={{
+                    flexGrow: 1,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {note.title}
+                </Typography>
+              </Box>
+            ))}
+            
+            {/* 子フォルダ */}
+            {item.children.length > 0 && renderFolderTree(item.children, level + 1)}
+          </>
+        )}
+      </React.Fragment>
     ));
   };
 
-  return (
-    <Paper
-      elevation={0}
-      sx={{
-        width: 280,
-        height: "100%",
-        borderRight: "1px solid #e0e0e0",
-        overflow: "auto",
-        p: 1,
-      }}
-    >
-      <Box sx={{ p: 1, mb: 1 }}>
-        <Typography variant="h6" component="h2" sx={{ fontWeight: 600 }}>
-          フォルダ
+  const sidebarContent = (
+    <>
+      <Box sx={{ p: 2 }}>
+        <Typography 
+          variant="h6" 
+          component="h2" 
+          sx={{ 
+            fontWeight: 700, 
+            mb: 1,
+            background: "linear-gradient(45deg, #3f51b5, #2196f3)",
+            backgroundClip: "text",
+            WebkitBackgroundClip: "text",
+            color: "transparent",
+            textShadow: "0 2px 4px rgba(0,0,0,0.1)"
+          }}
+        >
+          フォルダとノート
         </Typography>
+        
+        <Divider sx={{ mb: 2, borderColor: "rgba(0, 0, 0, 0.1)" }} />
+        
+        {/* アクションボタン */}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-around",
+            mb: 2,
+          }}
+        >
+          <Button
+            size="small"
+            startIcon={<NewFolderIcon />}
+            variant="outlined"
+            onClick={() => {
+              if (folderTree.length > 0) {
+                setSelectedFolder(folderTree[0].folder);
+                handleCreateDialogOpen("folder");
+              }
+            }}
+            sx={{ 
+              borderRadius: '20px',
+              borderWidth: 2,
+              textTransform: 'none',
+              fontWeight: 500,
+              '&:hover': {
+                borderWidth: 2,
+                backgroundColor: 'rgba(63, 81, 181, 0.04)'
+              }
+            }}
+          >
+            新規フォルダ
+          </Button>
+          <Button
+            size="small"
+            startIcon={<NewFileIcon />}
+            variant="outlined"
+            onClick={() => {
+              if (folderTree.length > 0) {
+                setSelectedFolder(folderTree[0].folder);
+                handleCreateDialogOpen("file");
+              }
+            }}
+            sx={{ 
+              borderRadius: '20px',
+              borderWidth: 2,
+              textTransform: 'none',
+              fontWeight: 500,
+              '&:hover': {
+                borderWidth: 2,
+                backgroundColor: 'rgba(63, 81, 181, 0.04)'
+              }
+            }}
+          >
+            新規ノート
+          </Button>
+        </Box>
+        
+        <Divider sx={{ mb: 2, borderColor: "rgba(0, 0, 0, 0.1)" }} />
       </Box>
 
-      <Divider sx={{ mb: 2 }} />
-
-      {/* ルートレベルのアクション */}
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-around",
-          mb: 2,
-          px: 1,
-        }}
-      >
-        <Button
-          size="small"
-          startIcon={<NewFolderIcon />}
-          variant="outlined"
-          onClick={() => {
-            setSelectedNode(fileStructure[0]);
-            handleCreateDialogOpen("folder");
-          }}
-          sx={{ borderRadius: '20px' }}
-        >
-          新規フォルダ
-        </Button>
-        <Button
-          size="small"
-          startIcon={<NewFileIcon />}
-          variant="outlined"
-          onClick={() => {
-            setSelectedNode(fileStructure[0]);
-            handleCreateDialogOpen("file");
-          }}
-          sx={{ borderRadius: '20px' }}
-        >
-          新規ファイル
-        </Button>
-      </Box>
-
-      <Divider sx={{ mb: 2 }} />
-
-      {/* ファイル構造の表示 */}
-      <Box sx={{ mb: 2 }}>{renderFileStructure(fileStructure)}</Box>
-
-      {/* フォルダ操作メニュー */}
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
-      >
-        <MenuItem
-          onClick={() => handleCreateDialogOpen("folder")}
-          sx={{ minWidth: 150 }}
-        >
-          <NewFolderIcon fontSize="small" sx={{ mr: 1 }} />
-          フォルダ作成
-        </MenuItem>
-        <MenuItem onClick={() => handleCreateDialogOpen("file")}>
-          <NewFileIcon fontSize="small" sx={{ mr: 1 }} />
-          ファイル作成
-        </MenuItem>
-        <Divider />
-        <MenuItem onClick={handleMenuClose} sx={{ color: "error.main" }}>
-          <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
-          削除
-        </MenuItem>
-      </Menu>
+      {/* フォルダ構造 */}
+      {loading ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+          <CircularProgress />
+        </Box>
+      ) : folderTree.length === 0 ? (
+        <Box sx={{ p: 2, textAlign: 'center' }}>
+          <Typography variant="body2" color="text.secondary">
+            フォルダが見つかりません
+          </Typography>
+        </Box>
+      ) : (
+        <Box sx={{ 
+          overflow: 'auto', 
+          maxHeight: 'calc(100vh - 220px)',
+          '&::-webkit-scrollbar': {
+            width: '8px',
+          },
+          '&::-webkit-scrollbar-track': {
+            background: '#f1f1f1',
+            borderRadius: '4px',
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: '#c1c1c1',
+            borderRadius: '4px',
+            '&:hover': {
+              background: '#a8a8a8',
+            }
+          }
+        }}>
+          {renderFolderTree(folderTree)}
+        </Box>
+      )}
 
       {/* 新規作成ダイアログ */}
       <Dialog
@@ -334,35 +381,205 @@ const SideBar: React.FC = () => {
         onClose={() => setCreateDialogOpen(false)}
         fullWidth
         maxWidth="xs"
+        PaperProps={{
+          sx: {
+            borderRadius: '16px',
+            background: 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+          }
+        }}
       >
-        <DialogTitle>
-          {createType === "folder" ? "新規フォルダの作成" : "新規ファイルの作成"}
+        <DialogTitle sx={{ 
+          fontWeight: 600,
+          background: "linear-gradient(45deg, #3f51b5, #2196f3)",
+          backgroundClip: "text",
+          WebkitBackgroundClip: "text",
+          color: "transparent",
+        }}>
+          {createType === "folder" ? "新規フォルダの作成" : "新規ノートの作成"}
         </DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             margin="dense"
-            label={createType === "folder" ? "フォルダ名" : "ファイル名"}
+            label={createType === "folder" ? "フォルダ名" : "ノートタイトル"}
             fullWidth
             variant="outlined"
             value={newItemName}
             onChange={(e) => setNewItemName(e.target.value)}
-            placeholder={createType === "folder" ? "新しいフォルダ" : "新しいファイル.md"}
-            sx={{ mt: 1 }}
+            placeholder={createType === "folder" ? "新しいフォルダ" : "新しいノート"}
+            sx={{ 
+              mt: 1,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: '12px',
+                '&:hover': {
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#3f51b5',
+                  }
+                },
+                '&.Mui-focused': {
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: '#3f51b5',
+                    borderWidth: 2,
+                  }
+                }
+              }
+            }}
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setCreateDialogOpen(false)}>キャンセル</Button>
+        <DialogActions sx={{ p: 3 }}>
+          <Button 
+            onClick={() => setCreateDialogOpen(false)}
+            sx={{
+              borderRadius: '20px',
+              textTransform: 'none',
+              fontWeight: 500,
+              px: 3,
+              '&:hover': {
+                backgroundColor: 'rgba(0, 0, 0, 0.04)'
+              }
+            }}
+          >
+            キャンセル
+          </Button>
           <Button
-            onClick={handleCreateItem}
+            onClick={() => {
+              console.log("Create", createType, newItemName, selectedFolder);
+              setCreateDialogOpen(false);
+            }}
             variant="contained"
             color="primary"
             disabled={!newItemName.trim()}
+            sx={{
+              borderRadius: '20px',
+              textTransform: 'none',
+              fontWeight: 500,
+              px: 3,
+              boxShadow: '0 4px 10px rgba(63, 81, 181, 0.2)',
+              '&:hover': {
+                boxShadow: '0 6px 12px rgba(63, 81, 181, 0.3)',
+                backgroundColor: '#303f9f'
+              }
+            }}
           >
             作成
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* フォルダ操作メニュー */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+        PaperProps={{
+          sx: {
+            borderRadius: '12px',
+            mt: 1,
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)',
+          }
+        }}
+      >
+        <MenuItem
+          onClick={() => handleCreateDialogOpen("folder")}
+          sx={{ 
+            minWidth: 150,
+            py: 1.5,
+            '&:hover': {
+              backgroundColor: 'rgba(63, 81, 181, 0.08)'
+            }
+          }}
+        >
+          <NewFolderIcon fontSize="small" sx={{ mr: 1, color: '#3f51b5' }} />
+          フォルダ作成
+        </MenuItem>
+        <MenuItem 
+          onClick={() => handleCreateDialogOpen("file")}
+          sx={{ 
+            py: 1.5,
+            '&:hover': {
+              backgroundColor: 'rgba(63, 81, 181, 0.08)'
+            }
+          }}
+        >
+          <NewFileIcon fontSize="small" sx={{ mr: 1, color: '#3f51b5' }} />
+          ノート作成
+        </MenuItem>
+        <Divider sx={{ my: 1 }} />
+        <MenuItem 
+          onClick={handleMenuClose} 
+          sx={{ 
+            color: "error.main",
+            py: 1.5,
+            '&:hover': {
+              backgroundColor: 'rgba(211, 47, 47, 0.08)'
+            }
+          }}
+        >
+          <DeleteIcon fontSize="small" sx={{ mr: 1 }} />
+          削除
+        </MenuItem>
+      </Menu>
+    </>
+  );
+
+  // レスポンシブ対応
+  if (isMobile) {
+    return (
+      <>
+        <IconButton
+          color="inherit"
+          aria-label="メニューを開く"
+          edge="start"
+          onClick={handleDrawerToggle}
+          sx={{ 
+            position: 'fixed', 
+            left: 16, 
+            bottom: 16, 
+            zIndex: 1200, 
+            bgcolor: 'primary.main',
+            color: 'white',
+            '&:hover': {
+              bgcolor: 'primary.dark',
+            },
+            boxShadow: 3
+          }}
+        >
+          <MenuIcon />
+        </IconButton>
+        
+        <Drawer
+          variant="temporary"
+          open={mobileOpen}
+          onClose={handleDrawerToggle}
+          sx={{
+            '& .MuiDrawer-paper': { 
+              width: 280,
+              boxSizing: 'border-box',
+            },
+          }}
+        >
+          {sidebarContent}
+        </Drawer>
+      </>
+    );
+  }
+
+  return (
+    <Paper
+      elevation={0}
+      sx={{
+        width: 280,
+        height: "100%",
+        borderRight: "1px solid rgba(0, 0, 0, 0.1)",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+        background: "rgba(255, 255, 255, 0.9)",
+        backdropFilter: "blur(10px)",
+      }}
+    >
+      {sidebarContent}
     </Paper>
   );
 };

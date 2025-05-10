@@ -45,3 +45,21 @@ func CreateUserResponseSingle(user model.User, token string) User {
 		Token:     token,
 	}
 }
+
+type UserIndexResponse struct {
+	User            User            `json:"user"`
+	FolderAndNoteTree []*FolderNoteTree `json:"folderAndNoteTree"`
+}
+
+func CreateUserIndexResponse(user model.User, folderAndNoteTree []*FolderNoteTree) UserIndexResponse {
+	return UserIndexResponse{
+		User: User{
+			ID:        user.ID(),
+			Name:      user.Name(),
+			Email:     user.Email(),
+			CreatedAt: user.CreatedAt(),
+			UpdatedAt: user.UpdatedAt(),
+		},
+		FolderAndNoteTree: folderAndNoteTree,
+	}
+}

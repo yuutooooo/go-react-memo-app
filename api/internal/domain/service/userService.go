@@ -17,6 +17,7 @@ type UserService interface {
 	CreateToken(user *model.User) (string, error)
 	HashPassword(user *model.User) error
 	CheckPassword(user *model.User, password string) error
+	GetUserById(id string) (*model.User, error)
 }
 
 type userService struct {
@@ -85,4 +86,12 @@ func (s *userService) CheckPassword(user *model.User, password string) error {
 		return err
 	}
 	return nil
+}
+
+func (s *userService) GetUserById(id string) (*model.User, error) {
+	user, err := s.userRepository.GetUserById(id)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }

@@ -58,3 +58,11 @@ func (u *NoteUsecase) DeleteNote(id string) error {
 	}
 	return nil
 }
+
+func (u *NoteUsecase) GetNotesByUserID(userID string) ([]*model.Note, error) {
+	notes, err := u.noteService.GetNotesByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+	return notes, nil
+}
